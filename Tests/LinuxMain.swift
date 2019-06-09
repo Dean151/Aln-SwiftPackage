@@ -3,5 +3,5 @@ import XCTest
 import AlnTests
 
 var tests = [XCTestCaseEntry]()
-tests += AlnTests.allTests()
+tests += ModelsTests.allTests()
 XCTMain(tests)
