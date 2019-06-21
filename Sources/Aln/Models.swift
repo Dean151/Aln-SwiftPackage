@@ -257,6 +257,10 @@ public struct Feeder: Codable {
     }
 }
 
+public struct User: Codable {
+
+}
+
 /*
 public struct User: Codable {
 
