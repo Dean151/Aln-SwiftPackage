@@ -259,35 +259,19 @@ public struct Feeder: Codable {
 
 public struct User: Codable {
 
-}
+    public struct Session: Codable, Equatable {
+        public let sessid: String
+        public let sessname: String
 
-/*
-public struct User: Codable {
-
-    public static var current: User?
+        public static func ==(lhs: Session, rhs: Session) -> Bool {
+            return lhs.sessid == rhs.sessid && lhs.sessname == rhs.sessname
+        }
+    }
 
     public let id: Int
+    public var email: String?
+    public let feeders: [Feeder]
+
     public let register: Date?
-
-    public var email: String
     public var login: Date?
-    public var feeders: [Feeder]
-
-    public var csrfToken: String? = nil
-    public var passToken: String? = nil
-
-    static func from(json: JSON) -> User? {
-        guard let id = json["id"].int, let email = json["email"].string else {
-            return nil
-        }
-        guard let feedersArray = json["feeders"].array else {
-            return nil
-        }
-
-        let feeders = feedersArray.compactMap({ Feeder.from(json: $0) })
-        let register = json["register"].date
-        let login = json["login"].date
-        return User(id: id, register: register, email: email, login: login, feeders: feeders, csrfToken: nil, passToken: nil)
-    }
 }
-*/
