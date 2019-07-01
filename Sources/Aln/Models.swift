@@ -250,10 +250,15 @@ public struct Feeder: Codable {
     public var name: String?
     public var defaultAmount: Int?
 
-    public init(id: Int, name: String? = nil, defaultAmount: Int? = nil) {
+    // Availability
+    public var isAvailable = false
+    public var lastResponded: Date? = nil
+
+    public init(id: Int, name: String? = nil, defaultAmount: Int? = nil, isAvailable: Bool = true) {
         self.id = id
         self.name = name
         self.defaultAmount = defaultAmount
+        self.isAvailable = true
     }
 }
 
@@ -270,7 +275,7 @@ public struct User: Codable {
 
     public let id: Int
     public var email: String?
-    public let feeders: [Feeder]
+    public var feeders: [Feeder]
 
     public let register: Date?
     public var login: Date?
