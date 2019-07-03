@@ -6,9 +6,10 @@
 //  Copyright © 2018 Thomas Durand. All rights reserved.
 //
 
-import Foundation
-import Combine
 import AuthenticationServices
+import Combine
+import Foundation
+import os.log
 
 enum HTTPMethod: String {
     case get = "GET"
@@ -45,13 +46,32 @@ public final class Networking {
         return request
     }
 
-    func request<T: Codable>(_ subpath: String, method: HTTPMethod, body: T) -> URLRequest {
+    func request<T: Encodable>(_ subpath: String, method: HTTPMethod, body: T) -> URLRequest {
         var request = self.request(subpath, method: method)
         let encoder = JSONEncoder()
         do {
             request.httpBody = try encoder.encode(body)
         } catch {}
         return request
+    }
+
+    func performRequest<R: Decodable>(_ subpath: String, method: HTTPMethod) -> AnyPublisher<R, Error> {
+        return session.dataTaskPublisher(for: request(subpath, method: method))
+            .map { $0.data }
+            .decode(type: R.self, decoder: decoder)
+            .eraseToAnyPublisher()
+    }
+
+    func performRequest<T: Encodable, R: Decodable>(_ subpath: String, method: HTTPMethod, body: T) -> AnyPublisher<R, Error> {
+        return session.dataTaskPublisher(for: request(subpath, method: method, body: body))
+            .map { $0.data }
+            .decode(type: R.self, decoder: decoder)
+            .tryCatch({ (error) throws -> AnyPublisher<R, Never> in
+                os_log("Networking error: %{PUBLIC}@", type: .error, error.localizedDescription)
+                // Rethrow
+                throw error
+            })
+            .eraseToAnyPublisher()
     }
 
     public struct LogUserResponse: Codable {
@@ -76,10 +96,7 @@ public final class Networking {
             identityToken: credentials.identityToken
         )
         
-        return session.dataTaskPublisher(for: request("api/user/login", method: .post, body: body))
-            .map { $0.data }
-            .decode(type: LogUserResponse.self, decoder: decoder)
-            .eraseToAnyPublisher()
+        return performRequest("api/user/login", method: .post, body: body)
     }
 
     public struct CheckSessionResponse: Codable {
@@ -94,28 +111,17 @@ public final class Networking {
             let appleId: String
         }
         let body = CheckUserData(appleId: appleId)
-        return session.dataTaskPublisher(for: request("api/user/check", method: .post, body: body))
-            .map { $0.data }
-            .decode(type: CheckSessionResponse.self, decoder: decoder)
-            .eraseToAnyPublisher()
+        return performRequest("api/user/check", method: .post, body: body)
     }
 
-    public func logoutUser() -> AnyPublisher<Bool, Error> {
-        struct LogoutUserResponse: Codable {
-            let success: Bool
-        }
-
-        return session.dataTaskPublisher(for: request("api/user/logout", method: .post))
-            .map { $0.data }
-            .decode(type: LogoutUserResponse.self, decoder: decoder)
-            .map({ $0.success })
-            .eraseToAnyPublisher()
+    public struct LogoutUserResponse: Codable {
+        let success: Bool
+    }
+    public func logoutUser() -> AnyPublisher<LogoutUserResponse, Error> {
+        return performRequest("api/user/logout", method: .post)
     }
 
     public func getFeeder(id: Int) -> AnyPublisher<Feeder, Error> {
-        return session.dataTaskPublisher(for: request("/api/feeder/\(id)", method: .post))
-            .map { $0.data }
-            .decode(type: Feeder.self, decoder: decoder)
-            .eraseToAnyPublisher()
+        return performRequest("/api/feeder/\(id)", method: .post)
     }
 }
