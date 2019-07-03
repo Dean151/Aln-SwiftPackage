@@ -279,4 +279,12 @@ public struct User: Codable {
 
     public let register: Date?
     public var login: Date?
+
+    public init(id: Int, email: String? = nil, feeders: [Feeder] = [], register: Date? = nil, login: Date? = nil) {
+        self.id = id
+        self.email = email
+        self.feeders = feeders
+        self.register = register
+        self.login = login
+    }
 }
