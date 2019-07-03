@@ -58,6 +58,8 @@ public final class Networking {
         public let success: Bool
         public let user: User?
         public let token: String?
+
+        public static let loginFailed = LogUserResponse(success: false, user: nil, token: nil)
     }
     public func logUser(credentials: ASAuthorizationAppleIDCredential) -> AnyPublisher<LogUserResponse, Error> {
         struct LogUserData: Codable {

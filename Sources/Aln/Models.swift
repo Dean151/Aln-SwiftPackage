@@ -246,6 +246,13 @@ extension ScheduledFeedingPlan: Sequence {
 }
 
 public struct Feeder: Codable {
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case defaultAmount
+    }
+
     public let id: Int
     public var name: String?
     public var defaultAmount: Int?
@@ -265,11 +272,34 @@ public struct Feeder: Codable {
 public struct User: Codable {
 
     public struct Session: Codable, Equatable {
-        public let sessid: String
-        public let sessname: String
+        public let domain: String
+        public let expires: Date?
+        public let secure: Bool
+        public let name: String
+        public let path: String
+        public let value: String
+        public let version: Int
 
-        public static func ==(lhs: Session, rhs: Session) -> Bool {
-            return lhs.sessid == rhs.sessid && lhs.sessname == rhs.sessname
+        public init(cookie: HTTPCookie) {
+            domain = cookie.domain
+            expires = cookie.expiresDate
+            secure = cookie.isSecure
+            name = cookie.name
+            path = cookie.path
+            value = cookie.value
+            version = cookie.version
+        }
+
+        public var cookie: HTTPCookie? {
+            return HTTPCookie(properties: [
+                .domain: domain,
+                .expires: expires as Any,
+                .secure: secure,
+                .name: name,
+                .path: path,
+                .value: value,
+                .version: version
+            ])
         }
     }
 
