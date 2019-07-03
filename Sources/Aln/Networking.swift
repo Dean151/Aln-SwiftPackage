@@ -63,12 +63,14 @@ public final class Networking {
     }
     public func logUser(credentials: ASAuthorizationAppleIDCredential) -> AnyPublisher<LogUserResponse, Error> {
         struct LogUserData: Codable {
+            let appleId: String
             let email: String?
             let authorizationCode: Data?
             let identityToken: Data?
         }
 
         let body = LogUserData(
+            appleId: credentials.user,
             email: credentials.email,
             authorizationCode: credentials.authorizationCode,
             identityToken: credentials.identityToken
@@ -87,8 +89,12 @@ public final class Networking {
 
         public static let notLoggedIn = CheckSessionResponse(loggedIn: false, user: nil, token: nil)
     }
-    public func checkSession() -> AnyPublisher<CheckSessionResponse, Error> {
-        return session.dataTaskPublisher(for: request("api/user/check", method: .post))
+    public func checkSession(appleId: String) -> AnyPublisher<CheckSessionResponse, Error> {
+        struct CheckUserData: Codable {
+            let appleId: String
+        }
+        let body = CheckUserData(appleId: appleId)
+        return session.dataTaskPublisher(for: request("api/user/check", method: .post, body: body))
             .map { $0.data }
             .decode(type: CheckSessionResponse.self, decoder: decoder)
             .eraseToAnyPublisher()
